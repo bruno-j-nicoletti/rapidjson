@@ -15,6 +15,9 @@
 #ifndef UNITTEST_H_
 #define UNITTEST_H_
 
+// Can't get the writer string literal unit test to work unless this is enabled across
+// all compilation units. Bruno Nicoletti
+#define RAPIDJSON_UNIT_TEST_STRING_LITERALS
 
 // gtest indirectly included inttypes.h, without __STDC_CONSTANT_MACROS.
 #ifndef __STDC_CONSTANT_MACROS
