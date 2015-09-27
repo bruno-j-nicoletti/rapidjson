@@ -52,7 +52,7 @@ public :
   ///
   /// This steals the writer from the src ObjectBlock. Allows for
   /// function returns and assignements.
-  ObjectBlock(ObjectBlockBlock &&src)
+  ObjectBlock(ObjectBlock &&src)
     : writer_(src.writer_)
   {
     src.writer_ = NULL;

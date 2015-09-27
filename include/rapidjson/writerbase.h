@@ -320,7 +320,7 @@ public:
     /// When the returned value goes out of scope the
     /// object will be closed.
     template<class STRING>
-    ObjectBlock<Derived> Object(const String &key)
+    ObjectBlock<Derived> Object(const STRING &key)
     {
       return std::move(ObjectBlock<Derived>(*DerivedThis(), key));
     }
@@ -367,7 +367,7 @@ public:
     /// When the returned value goes out of scope the
     /// array will be closed.
     template<class STRING>
-    ArrayBlock<Derived> Array(const String &key)
+    ArrayBlock<Derived> Array(const STRING &key)
     {
       return std::move(ArrayBlock<Derived>(*DerivedThis(), key));
     }
