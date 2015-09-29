@@ -24,31 +24,83 @@ RAPIDJSON_DIAG_OFF(effc++)
 RAPIDJSON_DIAG_OFF(float-equal)
 #endif
 
-TEST(Tokeniser, Basics) {
-    StringStream s("{ 12, -12 } true, false");
-    Tokeniser<StringStream> t(s);
+TEST(RapidJsonTokeniser, Basics) {
+  rapidjson::StringStream s("{ 12, -12, 12.4, \"key\": \"fish\" } true false [ ]");
+  rapidjson::Tokeniser<rapidjson::StringStream> t(s);
 
-    Token tok = t.Get();
-    EXPECT_EQ(tok.type(), Token::eStartObject);
+  rapidjson::Token tok = t.Get();
+  EXPECT_EQ(rapidjson::Token::eStartObject, tok.type());
 
-    tok = t.Get();
-    EXPECT_EQ(tok.type(), Token::eUInt32);
-    EXPECT_EQ( uint32_t(tok), 12u);
+  t.Get(tok);
+  EXPECT_EQ(rapidjson::Token::eUInt32, tok.type());
+  EXPECT_EQ( uint32_t(tok), 12u);
 
-    tok = t.Get();
-    EXPECT_EQ(tok.type(), Token::eInt32);
-    EXPECT_EQ( int32_t(tok), -12);
+  tok = t.Get();
+  EXPECT_EQ(rapidjson::Token::eComma, tok.type());
 
-    tok = t.Get();
-    EXPECT_EQ(tok.type(), Token::eEndObject);
+  tok = t.Get();
+  EXPECT_EQ(rapidjson::Token::eInt32, tok.type());
+  EXPECT_EQ( int32_t(tok), -12);
 
-    tok = t.Get();
-    EXPECT_EQ(tok.type(), Token::eBool);
-    EXPECT_EQ(bool(tok), true);
+  tok = t.Get();
+  EXPECT_EQ(rapidjson::Token::eComma, tok.type());
 
-    tok = t.Get();
-    EXPECT_EQ(bool(tok), false);
+  tok = t.Get();
+  EXPECT_EQ(rapidjson::Token::eDouble, tok.type());
+
+  tok = t.Get();
+  EXPECT_EQ(rapidjson::Token::eComma, tok.type());
+
+  tok = t.Get();
+  EXPECT_EQ(rapidjson::Token::eKey, tok.type());
+  EXPECT_STREQ("key", (const char *)tok);
+  EXPECT_EQ(rapidjson::SizeType(3), tok.strlen());
+
+  tok = t.Get();
+  EXPECT_EQ(rapidjson::Token::eString, tok.type());
+  EXPECT_STREQ("fish", (const char *)tok);
+  EXPECT_EQ(rapidjson::SizeType(4), tok.strlen());
+
+  tok = t.Get();
+  EXPECT_EQ(rapidjson::Token::eEndObject, tok.type());
+
+  t.Get(tok);
+  EXPECT_EQ(rapidjson::Token::eBool, tok.type());
+  EXPECT_EQ(bool(tok), true);
+
+  tok = t.Get();
+  EXPECT_EQ(bool(tok), false);
+
+  t.Get(tok);
+  EXPECT_EQ(rapidjson::Token::eStartArray, tok.type());
+
+  tok = t.Get();
+  EXPECT_EQ(rapidjson::Token::eEndArray, tok.type());
+
+  t.Get(tok);
+  EXPECT_EQ(rapidjson::Token::eFinished, tok.type());
+
+  t.Get(tok);
+  EXPECT_EQ(rapidjson::Token::eFinished, tok.type());
+
+  EXPECT_EQ(false, bool(t.Get(tok)));
 }
+
+TEST(RapidJsonTokeniser, Errors) {
+  {
+    rapidjson::StringStream s("[ ^ ]");
+    rapidjson::Tokeniser<rapidjson::StringStream> t(s);
+
+    rapidjson::Token tok = t.Get();
+    EXPECT_EQ(rapidjson::Token::eStartArray, tok.type());
+
+    t.Get(tok);
+    EXPECT_EQ(rapidjson::Token::eFailed, tok.type());
+    EXPECT_EQ(true, t.HasParseError());
+    EXPECT_EQ(false, bool(t));
+  }
+}
+
 #ifdef __GNUC__
 RAPIDJSON_DIAG_POP
 #endif

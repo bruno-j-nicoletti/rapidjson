@@ -15,6 +15,7 @@ set(UNITTEST_SOURCES
   simdtest.cpp
     stringbuffertest.cpp
     strtodtest.cpp
+    tokenisertest.cpp
     unittest.cpp
     valuetest.cpp
     writertest.cpp
