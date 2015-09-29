@@ -84,6 +84,18 @@ TEST(RapidJsonTokeniser, Basics) {
   EXPECT_EQ(rapidjson::Token::eFinished, tok.type());
 
   EXPECT_EQ(false, bool(t.Get(tok)));
+
+  rapidjson::StringStream s2("[]");
+  t.SetStream(s2);
+
+  t.Get(tok);
+  EXPECT_EQ(rapidjson::Token::eStartArray, tok.type());
+
+  tok = t.Get();
+  EXPECT_EQ(rapidjson::Token::eEndArray, tok.type());
+
+  t.Get(tok);
+  EXPECT_EQ(rapidjson::Token::eFinished, tok.type());
 }
 
 TEST(RapidJsonTokeniser, Errors) {

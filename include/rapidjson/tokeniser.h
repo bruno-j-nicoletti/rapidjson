@@ -230,13 +230,21 @@ public:
             size_t stackCapacity = kDefaultStackCapacity)
     : stack_(stackAllocator, stackCapacity)
     , parseResult_()
-    , stream_(is)
+    , stream_(&is)
     , isFinished_(false)
   {
-    SkipWhitespace(stream_);
-    if (stream_.Peek() == '\0') {
-      RAPIDJSON_PARSE_ERROR(kParseErrorDocumentEmpty, stream_.Tell());
+    SkipWhitespace(*stream_);
+    if (stream_->Peek() == '\0') {
+      RAPIDJSON_PARSE_ERROR(kParseErrorDocumentEmpty, stream_->Tell());
     }
+  }
+
+  /// !Reset to a new stream
+  void SetStream(InputStream& is)
+  {
+    stream_ = &is;
+    isFinished_ = false;
+    parseResult_.Clear();
   }
 
   //! Fetch the next JSON token from the stream.
@@ -249,14 +257,14 @@ public:
       tok = Token::eFinished;
     }
     else {
-      SkipWhitespace(stream_);
-      switch (stream_.Peek()) {
+      SkipWhitespace(*stream_);
+      switch (stream_->Peek()) {
       case '\0' : tok = Token::eFinished; isFinished_ = true; break;
-      case ','  : stream_.Take(); tok = Token::eComma; break;
-      case '{'  : stream_.Take(); tok = Token::eStartObject; break;
-      case '}'  : stream_.Take(); tok = Token::eEndObject; break;
-      case '['  : stream_.Take(); tok = Token::eStartArray; break;
-      case ']'  : stream_.Take(); tok = Token::eEndArray; break;
+      case ','  : stream_->Take(); tok = Token::eComma; break;
+      case '{'  : stream_->Take(); tok = Token::eStartObject; break;
+      case '}'  : stream_->Take(); tok = Token::eEndObject; break;
+      case '['  : stream_->Take(); tok = Token::eStartArray; break;
+      case ']'  : stream_->Take(); tok = Token::eEndArray; break;
       case 'n'  : ParseNull(tok); break;
       case 't'  : ParseTrue(tok); break;
       case 'f'  : ParseFalse(tok); break;
@@ -266,6 +274,7 @@ public:
     }
     return *this;
   }
+
 
   //! Fetch the next JSON token from the stream.
   Token Get()
@@ -314,40 +323,40 @@ private:
   };
 
   void ParseNull(Token &tok) {
-    RAPIDJSON_ASSERT(stream_.Peek() == 'n');
-    stream_.Take();
+    RAPIDJSON_ASSERT(stream_->Peek() == 'n');
+    stream_->Take();
 
-    if (stream_.Take() == 'u' && stream_.Take() == 'l' && stream_.Take() == 'l') {
+    if (stream_->Take() == 'u' && stream_->Take() == 'l' && stream_->Take() == 'l') {
       tok = Token::eNull;
     }
     else {
-      RAPIDJSON_PARSE_ERROR_NORETURN(kParseErrorValueInvalid, stream_.Tell() - 1);
+      RAPIDJSON_PARSE_ERROR_NORETURN(kParseErrorValueInvalid, stream_->Tell() - 1);
       tok = Token::eFailed;
     }
   }
 
   void ParseTrue(Token &tok) {
-    RAPIDJSON_ASSERT(stream_.Peek() == 't');
-    stream_.Take();
+    RAPIDJSON_ASSERT(stream_->Peek() == 't');
+    stream_->Take();
 
-    if (stream_.Take() == 'r' && stream_.Take() == 'u' && stream_.Take() == 'e') {
+    if (stream_->Take() == 'r' && stream_->Take() == 'u' && stream_->Take() == 'e') {
       tok = true;
     }
     else {
-      RAPIDJSON_PARSE_ERROR_NORETURN(kParseErrorValueInvalid, stream_.Tell() - 1);
+      RAPIDJSON_PARSE_ERROR_NORETURN(kParseErrorValueInvalid, stream_->Tell() - 1);
       tok = Token::eFailed;
     }
   }
 
   void ParseFalse(Token &tok) {
-    RAPIDJSON_ASSERT(stream_.Peek() == 'f');
-    stream_.Take();
+    RAPIDJSON_ASSERT(stream_->Peek() == 'f');
+    stream_->Take();
 
-    if (stream_.Take() == 'a' && stream_.Take() == 'l' && stream_.Take() == 's' && stream_.Take() == 'e') {
+    if (stream_->Take() == 'a' && stream_->Take() == 'l' && stream_->Take() == 's' && stream_->Take() == 'e') {
       tok = false;
     }
     else {
-      RAPIDJSON_PARSE_ERROR_NORETURN(kParseErrorValueInvalid, stream_.Tell() - 1);
+      RAPIDJSON_PARSE_ERROR_NORETURN(kParseErrorValueInvalid, stream_->Tell() - 1);
       tok = Token::eFailed;
     }
   }
@@ -355,7 +364,7 @@ private:
   unsigned ParseHex4() {
     unsigned codepoint = 0;
     for (int i = 0; i < 4; i++) {
-      Ch c = stream_.Take();
+      Ch c = stream_->Take();
       codepoint <<= 4;
       codepoint += static_cast<unsigned>(c);
       if (c >= '0' && c <= '9')
@@ -365,7 +374,7 @@ private:
       else if (c >= 'a' && c <= 'f')
         codepoint -= 'a' - 10;
       else {
-        RAPIDJSON_PARSE_ERROR_NORETURN(kParseErrorStringUnicodeEscapeInvalidHex, stream_.Tell() - 1);
+        RAPIDJSON_PARSE_ERROR_NORETURN(kParseErrorStringUnicodeEscapeInvalidHex, stream_->Tell() - 1);
         RAPIDJSON_PARSE_ERROR_EARLY_RETURN(0);
       }
     }
@@ -397,7 +406,7 @@ private:
 
   // Parse string and generate String event. Different code paths for kParseInsituFlag.
   void ParseString(Token &tok) {
-    internal::StreamLocalCopy<InputStream> copy(stream_);
+    internal::StreamLocalCopy<InputStream> copy(*stream_);
     InputStream& s(copy.s);
 
     const typename TargetEncoding::Ch* str = NULL;
@@ -424,7 +433,7 @@ private:
       length = static_cast<SizeType>(stackStream.Length()) - 1;
       str = stackStream.Pop();
     }
-    SkipWhitespace(stream_);
+    SkipWhitespace(*stream_);
     if (s.Peek() == ':') {
       s.Take();
       tok.setKey(str, SizeType(length));
@@ -527,8 +536,8 @@ private:
     ~NumberStream() {}
 
     RAPIDJSON_FORCEINLINE Ch TakePush() {
-      stackStream.Put((char)Base::stream_.Peek());
-      return Base::stream_.Take();
+      stackStream.Put((char)Base::stream_->Peek());
+      return Base::stream_->Take();
     }
 
     size_t Length() { return stackStream.Length(); }
@@ -543,7 +552,7 @@ private:
   };
 
   void ParseNumber(Token &tok) {
-    internal::StreamLocalCopy<InputStream> copy(stream_);
+    internal::StreamLocalCopy<InputStream> copy(*stream_);
     NumberStream<InputStream, (ParseFlags & kParseFullPrecisionFlag) != 0> s(*this, copy.s);
 
     // Parse minus
@@ -765,7 +774,7 @@ private:
   static const size_t kDefaultStackCapacity = 256;    //!< Default stack capacity in bytes for storing a single decoded string.
   internal::Stack<StackAllocator> stack_;  //!< A stack for storing decoded string temporarily during non-destructive parsing.
   ParseResult parseResult_;
-  InputStream stream_;
+  InputStream *stream_;
   bool isFinished_;
 }; // class Tokeniser
 
