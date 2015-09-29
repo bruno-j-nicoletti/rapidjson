@@ -33,13 +33,19 @@ public:
         \param An open istream to read from.
     */
     IOStreamReadStream(std::istream &stream)
-        : istream_(stream) {
+        : istream_(&stream) {
         peekBuffer_[0] = peekBuffer_[1] = peekBuffer_[2] = peekBuffer_[3] = 0;
+    }
+
+    //! Swap to another input stream
+    void SetStream(std::istream &stream)
+    {
+      istream_ = &stream;
     }
 
     //! Look at the next character in the stream without consuming it. Returns '\0' on eof.
     Ch Peek() const {
-        int v = istream_.peek();
+        int v = istream_->peek();
         if(!istream_ || v == std::char_traits<char>::eof()) return Ch('\0');
         return Ch(v);
     }
@@ -47,7 +53,7 @@ public:
     //! Extract the next character in the stream.
     Ch Take() {
         char ch;
-        if(istream_.get(ch)) {
+        if(istream_->get(ch)) {
             return Ch(ch);
         }
         else {
@@ -57,7 +63,7 @@ public:
 
     //! Where are we in the stream.
     size_t Tell() const {
-        return istream_.tellg();
+        return istream_->tellg();
     }
 
     // Not implemented
@@ -70,16 +76,16 @@ public:
     //!
     //! For encoding detection only, called at the start on openning a stream.
     const Ch* Peek4() const {
-        istream_.get(peekBuffer_, 4);
-        std::streamsize n = istream_.gcount() - 1;
+        istream_->get(peekBuffer_, 4);
+        std::streamsize n = istream_->gcount() - 1;
         for(std::streamsize i = 0; i <= n; ++i) {
-            istream_.putback(peekBuffer_[n - i]);
+            istream_->putback(peekBuffer_[n - i]);
         }
         return peekBuffer_;
     }
 
 private:
-    std::istream& istream_;
+    std::istream* istream_;
     mutable Ch peekBuffer_[4]; ///< need for the Peek4 nastyness
 };
 
