@@ -55,22 +55,22 @@ struct Token {
 public :
   /// the kind of tokens we can encounter
   enum Type {
-    eFailed = 0,
-    eFinished,
-    eComma,
-    eStartObject,
-    eEndObject,
-    eStartArray,
-    eEndArray,
-    eBool   =  0x101,
-    eInt32  =  0x102,
-    eUInt32 =  0x103,
-    eInt64  =  0x104,
-    eUInt64 =  0x105,
-    eDouble =  0x106,
-    eString =  0x107,
-    eKey    =  0x108,
-    eNull   =  0x109,
+    eFailed      = (1 << 0),
+    eFinished    = (1 << 1),
+    eComma       = (1 << 2),
+    eStartObject = (1 << 3),
+    eEndObject   = (1 << 4),
+    eStartArray  = (1 << 5),
+    eEndArray    = (1 << 6),
+    eBool        = (1 << 7),
+    eInt32       = (1 << 8),
+    eUInt32      = (1 << 9),
+    eInt64       = (1 << 10),
+    eUInt64      = (1 << 11),
+    eDouble      = (1 << 12),
+    eString      = (1 << 13),
+    eKey         = (1 << 14),
+    eNull        = (1 << 15),
   };
 
   /// Default ctor
