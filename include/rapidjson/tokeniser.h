@@ -216,7 +216,7 @@ protected :
     \tparam TargetEncoding Encoding of the parse output.
     \tparam StackAllocator Allocator type for stack.
 */
-template <typename InputStream, typename SourceEncoding = UTF8<>, typename TargetEncoding = UTF8<>, int ParseFlags = RAPIDJSON_PARSE_DEFAULT_FLAGS, typename StackAllocator = CrtAllocator>
+template <typename InputStream, int ParseFlags = RAPIDJSON_PARSE_DEFAULT_FLAGS, typename SourceEncoding = UTF8<>, typename TargetEncoding = UTF8<>, typename StackAllocator = CrtAllocator>
 class Tokeniser {
 public:
   typedef typename SourceEncoding::Ch Ch; //!< SourceEncoding character type
@@ -536,8 +536,8 @@ private:
     ~NumberStream() {}
 
     RAPIDJSON_FORCEINLINE Ch TakePush() {
-      stackStream.Put((char)Base::stream_->Peek());
-      return Base::stream_->Take();
+      stackStream.Put((char)Base::is.Peek());
+      return Base::is.Take();
     }
 
     size_t Length() { return stackStream.Length(); }
