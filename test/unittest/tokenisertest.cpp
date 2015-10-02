@@ -25,7 +25,7 @@ RAPIDJSON_DIAG_OFF(float-equal)
 #endif
 
 TEST(RapidJsonTokeniser, Basics) {
-  rapidjson::StringStream s("{ 12, -12, 12.4, \"key\": \"fish\" } true false [ ]");
+  rapidjson::StringStream s("{ 12, -12, 12.4, -1.0, \"key\": \"fish\" } true false [ ]");
   rapidjson::Tokeniser<rapidjson::StringStream> t(s);
 
   rapidjson::Token tok = t.Get();
@@ -47,6 +47,14 @@ TEST(RapidJsonTokeniser, Basics) {
 
   tok = t.Get();
   EXPECT_EQ(rapidjson::Token::eDouble, tok.type());
+  EXPECT_NEAR(12.4, double(tok), 0.001);
+
+  tok = t.Get();
+  EXPECT_EQ(rapidjson::Token::eComma, tok.type());
+
+  tok = t.Get();
+  EXPECT_EQ(rapidjson::Token::eDouble, tok.type());
+  EXPECT_NEAR(-1.0, double(tok), 0.001);
 
   tok = t.Get();
   EXPECT_EQ(rapidjson::Token::eComma, tok.type());

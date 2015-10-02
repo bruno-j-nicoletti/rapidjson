@@ -752,7 +752,7 @@ private:
         d = internal::StrtodFullPrecision(d, p, decimal, length, decimalPosition, exp);
       else
         d = internal::StrtodNormalPrecision(d, p);
-      tok = d;
+      tok = minus ? -d : d;
     }
     else {
       if (use64bit) {
