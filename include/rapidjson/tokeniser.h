@@ -239,10 +239,23 @@ public:
     }
   }
 
+  Tokeniser(StackAllocator* stackAllocator = 0,
+            size_t stackCapacity = kDefaultStackCapacity)
+    : stack_(stackAllocator, stackCapacity)
+    , parseResult_()
+    , stream_(NULL)
+    , isFinished_(false)
+  {
+  }
+
   /// !Reset to a new stream
   void SetStream(InputStream& is)
   {
     stream_ = &is;
+    SkipWhitespace(*stream_);
+    if (stream_->Peek() == '\0') {
+      RAPIDJSON_PARSE_ERROR(kParseErrorDocumentEmpty, stream_->Tell());
+    }
     isFinished_ = false;
     parseResult_.Clear();
   }
